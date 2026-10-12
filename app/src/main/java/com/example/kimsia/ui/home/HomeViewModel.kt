@@ -34,7 +34,7 @@ class HomeViewModel(
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     init {
-        viewModelScope.launch { repository.seedIfNeeded() }
+        viewModelScope.launch { repository.refresh() }
     }
 
     companion object {

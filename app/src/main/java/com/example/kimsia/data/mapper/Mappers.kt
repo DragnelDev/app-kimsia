@@ -2,6 +2,7 @@ package com.example.kimsia.data.mapper
 
 import com.example.kimsia.data.local.entity.ExerciseEntity
 import com.example.kimsia.data.local.entity.ExerciseOptionEntity
+import com.example.kimsia.data.local.entity.ExerciseWithOptions
 import com.example.kimsia.data.local.entity.LanguageEntity
 import com.example.kimsia.data.local.entity.LessonEntity
 import com.example.kimsia.data.local.entity.ProfileEntity
@@ -16,6 +17,9 @@ import com.example.kimsia.data.remote.dto.ProfileDto
 import com.example.kimsia.data.remote.dto.UnitDto
 import com.example.kimsia.data.remote.dto.UserLessonProgressDto
 import com.example.kimsia.data.remote.dto.UserStreakDto
+import com.example.kimsia.domain.model.Exercise
+import com.example.kimsia.domain.model.ExerciseOption
+import com.example.kimsia.domain.model.ExerciseType
 import com.example.kimsia.domain.model.Language
 import com.example.kimsia.domain.model.LearningUnit
 import com.example.kimsia.domain.model.Lesson
@@ -36,3 +40,16 @@ fun LanguageEntity.toDomain() = Language(id, code, name, flagIconUrl, isActive)
 fun UnitEntity.toDomain() = LearningUnit(id, languageId, title, description, orderIndex)
 fun LessonEntity.toDomain() = Lesson(id, unitId, title, orderIndex, totalXp)
 fun ProfileEntity.toDomain() = UserProfile(id, username, avatarUrl, streakDays, hearts, totalXp)
+
+fun ExerciseOptionEntity.toDomain() = ExerciseOption(id, optionText, imageUrl, isCorrect)
+
+/** [resolveAudio] convierte la ruta guardada en una URL reproducible (Supabase Storage). */
+fun ExerciseWithOptions.toDomain(resolveAudio: (String?) -> String?) = Exercise(
+    id = exercise.id,
+    lessonId = exercise.lessonId,
+    type = ExerciseType.fromApi(exercise.type),
+    questionText = exercise.questionText,
+    audioUrl = resolveAudio(exercise.audioUrl),
+    orderIndex = exercise.orderIndex,
+    options = options.sortedBy { it.id }.map { it.toDomain() },
+)

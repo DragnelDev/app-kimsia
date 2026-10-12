@@ -60,7 +60,7 @@ create table user_streaks (
   current_streak int not null default 0
 );
 
--- RLS: contenido legible por usuarios autenticados; datos de usuario solo del propio usuario.
+-- RLS: contenido educativo legible por anon y autenticados; datos de usuario solo del propio usuario.
 alter table languages enable row level security;
 alter table units enable row level security;
 alter table lessons enable row level security;
@@ -70,11 +70,29 @@ alter table profiles enable row level security;
 alter table user_lesson_progress enable row level security;
 alter table user_streaks enable row level security;
 
-create policy "read content" on languages for select to authenticated using (true);
-create policy "read content" on units for select to authenticated using (true);
-create policy "read content" on lessons for select to authenticated using (true);
-create policy "read content" on exercises for select to authenticated using (true);
-create policy "read content" on exercise_options for select to authenticated using (true);
+create policy "read content" on languages for select to anon, authenticated using (true);
+create policy "read content" on units for select to anon, authenticated using (true);
+create policy "read content" on lessons for select to anon, authenticated using (true);
+create policy "read content" on exercises for select to anon, authenticated using (true);
+create policy "read content" on exercise_options for select to anon, authenticated using (true);
 create policy "own profile" on profiles for all to authenticated using (id = auth.uid()) with check (id = auth.uid());
 create policy "own progress" on user_lesson_progress for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own streak" on user_streaks for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- Fase 2: bucket público para las pronunciaciones (mp3). Sube archivos como `gn/maitei.mp3`.
+insert into storage.buckets (id, name, public) values ('audio-lessons', 'audio-lessons', true)
+on conflict (id) do nothing;
+create policy "public read audio" on storage.objects for select to anon, authenticated
+  using (bucket_id = 'audio-lessons');
+
+-- Fase 2: crea el perfil automáticamente al registrarse un usuario (Auth).
+create or replace function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, username)
+  values (new.id, coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)));
+  return new;
+end;
+$$;
+create trigger on_auth_user_created after insert on auth.users
+  for each row execute function public.handle_new_user();

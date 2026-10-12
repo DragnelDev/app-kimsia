@@ -15,6 +15,9 @@ interface LearningRepository {
 
     fun selectLanguage(code: String)
 
-    /** Fase 1: carga datos de ejemplo en Room. Fase 2 lo reemplaza por sincronización con Supabase. */
-    suspend fun seedIfNeeded()
+    /**
+     * Garantiza datos locales (ejemplo si Room está vacío) y, si Supabase está configurado,
+     * sincroniza el catálogo y los datos del usuario. Un fallo de red no rompe la app.
+     */
+    suspend fun refresh(): Result<Unit>
 }

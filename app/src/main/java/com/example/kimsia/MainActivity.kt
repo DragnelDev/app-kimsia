@@ -17,7 +17,9 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
         setContent {
-            KimsiaTheme { KimsiaApp() }
+            KimsiaTheme {
+                KimsiaApp()
+            }
         }
     }
 }

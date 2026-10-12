@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -15,10 +17,19 @@ android {
 
     defaultConfig {
         applicationId = "com.example.kimsia"
-        minSdk = 24
+        minSdk = 26 // supabase-kt 3.x exige API 26+
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        // Credenciales de Supabase desde local.properties (no se suben a git). Si faltan, la app
+        // funciona offline con los datos de ejemplo.
+        val localProps = Properties().apply {
+            val file = rootProject.file("local.properties")
+            if (file.exists()) file.inputStream().use { load(it) }
+        }
+        buildConfigField("String", "SUPABASE_URL", "\"${localProps.getProperty("supabase.url", "")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProps.getProperty("supabase.anonKey", "")}\"")
     }
 
     buildTypes {
@@ -34,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -62,6 +74,18 @@ dependencies {
     // Coroutines + Serialization (DTOs de Supabase)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
+
+    // Supabase (Auth + PostgREST + Storage) y motor HTTP de Ktor
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.storage)
+    implementation(libs.ktor.client.android)
+
+    // Audio (Media3 ExoPlayer) e imágenes (Coil)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     // Room (caché offline)
     implementation(libs.androidx.room.runtime)
