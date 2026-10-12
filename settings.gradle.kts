@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DemoTecno"
+rootProject.name = "Kimsia"
 include(":app")
  
